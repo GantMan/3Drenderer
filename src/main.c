@@ -18,6 +18,13 @@ bool intialize_window(void) {
     return false;
   } 
 
+  // Use SDL to query the full-screen resolution
+  SDL_DisplayMode display_mode;
+  SDL_GetCurrentDisplayMode(0, &display_mode);
+
+  window_width = display_mode.w;
+  window_height = display_mode.h;
+
   // Create an SDL window 
   window = SDL_CreateWindow(
     NULL, 
@@ -44,6 +51,8 @@ bool intialize_window(void) {
     fprintf(stderr, "SDL_CreateRenderer Error");
     return false;
   }
+
+  SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
     
   return true;
 }
@@ -105,6 +114,13 @@ void render_color_buffer(void) {
 
 }
 
+uint32_t random_color() {
+  uint8_t r = (uint8_t) (rand() % 255);
+  uint8_t g = (uint8_t) (rand() % 255);
+  uint8_t b = (uint8_t) (rand() % 255);
+  return (r << 16) | (g << 8) | b;
+}
+
 void clear_color_buffer(uint32_t color) {
   for (int y = 0; y < window_height; y++) {
     for (int x = 0; x < window_width; x++) {
@@ -118,7 +134,9 @@ void render(void) {
   SDL_RenderClear(renderer);
  
   render_color_buffer();
-  clear_color_buffer(0xFFFFFF00);
+  // uint32_t some_color = 0xFFFFFF00; //random_color();
+  uint32_t some_color = random_color();
+  clear_color_buffer(some_color);
 
   SDL_RenderPresent(renderer);
 }

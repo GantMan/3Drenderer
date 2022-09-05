@@ -1,10 +1,14 @@
 #include <stdio.h>
+#include <stdint.h>
 #include <stdbool.h>
 #include <SDL2/SDL.h>
 
 bool is_running = false;
 SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
+uint32_t* color_buffer = NULL;
+int window_width = 800;
+int window_height = 600;
 
 bool intialize_window(void) {
   // Make sure we can initialize SDL
@@ -18,8 +22,8 @@ bool intialize_window(void) {
     NULL, 
     SDL_WINDOWPOS_CENTERED, 
     SDL_WINDOWPOS_CENTERED, 
-    800, 
-    600, 
+    window_width, 
+    window_height, 
     SDL_WINDOW_BORDERLESS
   );
 
@@ -44,6 +48,9 @@ bool intialize_window(void) {
 }
 
 void setup(void) {
+  // Create a color buffer
+  color_buffer = (uint32_t*) malloc(sizeof(uint32_t) * window_width * window_height);
+
   // Initialize the window
   is_running = intialize_window();
 }
@@ -77,16 +84,25 @@ void render(void) {
   SDL_RenderPresent(renderer);
 }
 
-int main(int argc, char *argv[]) {
-  is_running = intialize_window();
+void destroy_window(void) {
+  free(color_buffer);
+  SDL_DestroyRenderer(renderer);
+  SDL_DestroyWindow(window);
+  SDL_Quit();
+}
 
+int main(int argc, char *argv[]) {
+  
   setup();
 
+  // Game loop
   while (is_running) {
     process_input();
     update();
     render();
   }
+
+  destroy_window();
 
   return 0;
 } 

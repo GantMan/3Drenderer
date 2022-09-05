@@ -121,6 +121,25 @@ uint32_t random_color() {
   return (r << 16) | (g << 8) | b;
 }
 
+void draw_rect(int x, int y, int width, int height, uint32_t color) {
+  for (int i = 0; i < width; i++) {
+    for (int j = 0; j < height; j++) {
+      int current_x = x + i;
+      int current_y = y + j;
+      color_buffer[(window_width * current_y) + current_x] = color;
+    }
+  }
+}
+
+void draw_grid(int grid_size) {
+  for (int y = 0; y < window_height; y++) {
+    for (int x = 0; x < window_width; x++) {
+      uint32_t draw_color = (x % grid_size == 0 || y % grid_size == 0) ? random_color() : 0xFF000000;
+      color_buffer[(window_width * y) + x] = draw_color;
+    }
+  }
+}
+
 void clear_color_buffer(uint32_t color) {
   for (int y = 0; y < window_height; y++) {
     for (int x = 0; x < window_width; x++) {
@@ -132,10 +151,11 @@ void clear_color_buffer(uint32_t color) {
 void render(void) {
   SDL_SetRenderDrawColor(renderer, 255, 21, 21, 255);
   SDL_RenderClear(renderer);
+
+  draw_rect(150, 250, 200, 100, random_color());
  
   render_color_buffer();
-  // uint32_t some_color = 0xFFFFFF00; //random_color();
-  uint32_t some_color = random_color();
+  uint32_t some_color = 0xFFFFFF00; //random_color();
   clear_color_buffer(some_color);
 
   SDL_RenderPresent(renderer);

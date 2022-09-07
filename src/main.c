@@ -8,7 +8,9 @@
 const int N_POINTS = 9 * 9 * 9;
 vec3_t cube_points[N_POINTS];
 vec2_t projected_points[N_POINTS];
-float fov_factor = 120;
+vec3_t camera_position = {0, 0, -5};
+
+float fov_factor = 640;
 
 bool is_running = false;
 
@@ -30,9 +32,9 @@ void setup(void) {
 
   // Start loading array of vectors
   int point_count = 0;
-  for (float x = -1; x < 1; x += 0.25) {
-    for (float y = -1; y < 1; y += 0.25) {
-      for (float z = -1; z < 1; z += 0.25) {
+  for (float x = -1; x <= 1; x += 0.25) {
+    for (float y = -1; y <= 1; y += 0.25) {
+      for (float z = -1; z <= 1; z += 0.25) {
         vec3_t new_point = {x, y, z};
         cube_points[point_count++] = new_point;
       }
@@ -61,8 +63,8 @@ void process_input(void) {
 
 vec2_t project(vec3_t point) {
   vec2_t projected_point = {
-    .x = (fov_factor * point.x),
-    .y = (fov_factor * point.y)
+    .x = (fov_factor * point.x / point.z),
+    .y = (fov_factor * point.y / point.z)
   };
   return projected_point;
 }
@@ -70,6 +72,7 @@ vec2_t project(vec3_t point) {
 void update(void) {
   for (int i = 0; i < N_POINTS; i++) {
     vec3_t point = cube_points[i];
+    point.z -= camera_position.z;
     vec2_t projected_point = project(point);
     projected_points[i] = projected_point;
   }
@@ -85,7 +88,7 @@ void render(void) {
       point.y + (window_height / 2),
       5,
       5,
-      0xFFFFFFFF
+      random_color()
     );
   }
  

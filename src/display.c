@@ -59,6 +59,32 @@ void draw_pixel(int x, int y, uint32_t color) {
   }
 }
 
+void draw_line(int x0, int y0, int x1, int y1, uint32_t color) {
+  int dx = (x1 - x0);
+  int dy = (y1 - y0);
+
+  int longest_side_length = abs(dx) > abs(dy) ? abs(dx) : abs(dy);
+
+  // calculate slope increments
+  float x_inc = dx / (float) longest_side_length;
+  float y_inc = dy / (float) longest_side_length;
+
+  // draw line
+  float current_x = x0;
+  float current_y = y0;
+  for(int i = 0; i < longest_side_length; i++) {
+    draw_pixel(round(current_x), round(current_y), color);
+    current_x += x_inc;
+    current_y += y_inc;
+  }
+}
+
+void draw_triangle(int x0, int y0, int x1, int y1, int x2, int y2, uint32_t color) {
+  draw_line(x0, y0, x1, y1, color);
+  draw_line(x1, y1, x2, y2, color);
+  draw_line(x2, y2, x0, y0, color);
+}
+
 void draw_rect(int x, int y, int width, int height, uint32_t color) {
   for (int i = 0; i < width; i++) {
     for (int j = 0; j < height; j++) {
@@ -115,4 +141,8 @@ uint32_t random_color() {
   uint8_t g = (uint8_t) (rand() % 255);
   uint8_t b = (uint8_t) (rand() % 255);
   return (r << 16) | (g << 8) | b;
+}
+
+uint32_t glitter() {
+  return (rand() % 2) ? 0xFFFFFFFF : 0xFFFF0000;
 }

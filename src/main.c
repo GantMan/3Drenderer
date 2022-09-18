@@ -9,7 +9,7 @@
 
 triangle_t* triangles_to_render = NULL;
 
-vec3_t camera_position = {0, 0, -5};
+vec3_t camera_position = {0, 0, 0};
 
 float fov_factor = 640;
 
@@ -32,7 +32,7 @@ void setup(void) {
     window_height
   );
 
-  load_obj_file_data("./assets/f22.obj");
+  load_obj_file_data("./assets/cube.obj");
 }
 
 void process_input(void) {
@@ -85,7 +85,7 @@ void update(void) {
     face_vertices[1] = mesh.vertices[mesh_face.b - 1];
     face_vertices[2] = mesh.vertices[mesh_face.c - 1];
 
-    triangle_t projected_triangle;
+    vec3_t transformed_vertices[3];
 
     // Loop all 3 and apply transformations
     for (int j = 0; j < 3; j++) {
@@ -95,9 +95,38 @@ void update(void) {
       transformed_vertex = vec3_rotate_z(transformed_vertex, mesh.rotation.z);
 
       // Translate the vertex away from camera
-      transformed_vertex.z -= camera_position.z;
+      transformed_vertex.z += 5;
 
-      vec2_t projected_vertex = project(transformed_vertex);
+      // Saved transformed vertex
+      transformed_vertices[j] = transformed_vertex;
+    }
+
+    // Perform backface culling 
+    vec3_t vector_a = transformed_vertices[0];
+    vec3_t vector_b = transformed_vertices[1];
+    vec3_t vector_c = transformed_vertices[2];
+
+    vec3_t vector_ab = vec3_sub(vector_b, vector_a);
+    vec3_t vector_ac = vec3_sub(vector_c, vector_a);
+
+    // Compute the face normal
+    vec3_t normal = vec3_cross(vector_ab, vector_ac);
+
+    // Find the vector between the triangle and the camera origin
+    vec3_t camera_ray = vec3_sub(camera_position, vector_a);
+
+    // calculate how aligned the normal is with the camera ray
+    float dot_normal_camera = vec3_dot(normal, camera_ray);
+
+    // If the dot product is negative, the normal is pointing away from the camera
+    if (dot_normal_camera < 0) {
+      continue;
+    }
+
+    triangle_t projected_triangle;
+    // loop all 3 vertices and project them
+    for (int j = 0; j < 3; j++) {
+      vec2_t projected_vertex = project(transformed_vertices[j]);
 
       // Scale and translate point to middle of the screen
       projected_vertex.x += window_width / 2;

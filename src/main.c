@@ -108,9 +108,12 @@ void update(void) {
 
     vec3_t vector_ab = vec3_sub(vector_b, vector_a);
     vec3_t vector_ac = vec3_sub(vector_c, vector_a);
+    vec3_normalize(&vector_ab);
+    vec3_normalize(&vector_ac);
 
     // Compute the face normal
     vec3_t normal = vec3_cross(vector_ab, vector_ac);
+    vec3_normalize(&normal);
 
     // Find the vector between the triangle and the camera origin
     vec3_t camera_ray = vec3_sub(camera_position, vector_a);
@@ -154,6 +157,16 @@ void render(void) {
 
     draw_rect(triangle.points[2].x, triangle.points[2].y, 3, 3, 0xFFFFFFFF);
 
+    draw_filled_triangle(
+      triangle.points[0].x, 
+      triangle.points[0].y, 
+      triangle.points[1].x, 
+      triangle.points[1].y, 
+      triangle.points[2].x, 
+      triangle.points[2].y, 
+      0xFFFFFFFF
+    );
+
     draw_triangle(
       triangle.points[0].x, 
       triangle.points[0].y, 
@@ -161,8 +174,8 @@ void render(void) {
       triangle.points[1].y, 
       triangle.points[2].x, 
       triangle.points[2].y, 
-      glitter()
-    );
+      0xFFFF00FF
+    );    
   }
 
   // clear array of triangles to render

@@ -14,7 +14,7 @@ void fill_flat_bottom_triangle(int x0, int y0, int x1, int y1, int x2, int y2, u
     float curx1 = x0;
     float curx2 = x0;
 
-    for (int scanlineY = y0; scanlineY <= y1; scanlineY++) {
+    for (int scanlineY = y0; scanlineY <= y2; scanlineY++) {
         draw_line(curx1, scanlineY, curx2, scanlineY, color);
         curx1 += invslope1;
         curx2 += invslope2;
@@ -28,10 +28,10 @@ void fill_flat_top_triangle(int x0, int y0, int x1, int y1, int x2, int y2, u_in
     float curx1 = x2;
     float curx2 = x2;
 
-    for (int scanlineY = y2; scanlineY > y0; scanlineY--) {
+    for (int scanlineY = y2; scanlineY >= y0; scanlineY--) {
+        draw_line(curx1, scanlineY, curx2, scanlineY, color);
         curx1 -= invslope1;
         curx2 -= invslope2;
-        draw_line(curx1, scanlineY, curx2, scanlineY, color);
     }
 }
 
@@ -63,4 +63,10 @@ void draw_filled_triangle(int x0, int y0, int x1, int y1, int x2, int y2, u_int3
     fill_flat_bottom_triangle(x0, y0, x1, y1, Mx, My, color);
     fill_flat_top_triangle(x1, y1, Mx, My, x2, y2, color);
   }
+}
+
+void draw_triangle(int x0, int y0, int x1, int y1, int x2, int y2, uint32_t color) {
+  draw_line(x0, y0, x1, y1, color);
+  draw_line(x1, y1, x2, y2, color);
+  draw_line(x2, y2, x0, y0, color);
 }

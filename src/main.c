@@ -17,6 +17,10 @@ bool is_running = false;
 int previous_frame_time = 0;
 
 void setup(void) {
+  // Intitalize enum values
+  render_method = RENDER_SOLID_WIRE_VERTEX;
+  cull_method = CULL_BACKFACE;
+
   // Initialize the window
   is_running = initialize_window();
 
@@ -47,6 +51,20 @@ void process_input(void) {
     case SDL_KEYDOWN: {
       if (event.key.keysym.sym == SDLK_ESCAPE) {
         is_running = false;
+      } else if (event.key.keysym.sym == SDLK_1) {
+        render_method = RENDER_WIRE;
+      } else if (event.key.keysym.sym == SDLK_2) {
+        render_method = RENDER_WIRE_VERTEX;
+      } else if (event.key.keysym.sym == SDLK_3) {
+        render_method = RENDER_SOLID;
+      } else if (event.key.keysym.sym == SDLK_4) {
+        render_method = RENDER_SOLID_WIRE;
+      } else if (event.key.keysym.sym == SDLK_5) {
+        render_method = RENDER_SOLID_WIRE_VERTEX;
+      } else if (event.key.keysym.sym == SDLK_c) {
+        cull_method = CULL_BACKFACE;
+      } else if (event.key.keysym.sym == SDLK_d) {
+        cull_method = CULL_NONE;
       }
       break;
     }
@@ -101,29 +119,32 @@ void update(void) {
       transformed_vertices[j] = transformed_vertex;
     }
 
-    // Perform backface culling 
-    vec3_t vector_a = transformed_vertices[0];
-    vec3_t vector_b = transformed_vertices[1];
-    vec3_t vector_c = transformed_vertices[2];
+    if (cull_method == CULL_BACKFACE) {
+      // Perform backface culling 
+      vec3_t vector_a = transformed_vertices[0];
+      vec3_t vector_b = transformed_vertices[1];
+      vec3_t vector_c = transformed_vertices[2];
 
-    vec3_t vector_ab = vec3_sub(vector_b, vector_a);
-    vec3_t vector_ac = vec3_sub(vector_c, vector_a);
-    vec3_normalize(&vector_ab);
-    vec3_normalize(&vector_ac);
+      vec3_t vector_ab = vec3_sub(vector_b, vector_a);
+      vec3_t vector_ac = vec3_sub(vector_c, vector_a);
+      vec3_normalize(&vector_ab);
+      vec3_normalize(&vector_ac);
 
-    // Compute the face normal
-    vec3_t normal = vec3_cross(vector_ab, vector_ac);
-    vec3_normalize(&normal);
+      // Compute the face normal
+      vec3_t normal = vec3_cross(vector_ab, vector_ac);
+      vec3_normalize(&normal);
 
-    // Find the vector between the triangle and the camera origin
-    vec3_t camera_ray = vec3_sub(camera_position, vector_a);
+      // Find the vector between the triangle and the camera origin
+      vec3_t camera_ray = vec3_sub(camera_position, vector_a);
 
-    // calculate how aligned the normal is with the camera ray
-    float dot_normal_camera = vec3_dot(normal, camera_ray);
+      // calculate how aligned the normal is with the camera ray
+      float dot_normal_camera = vec3_dot(normal, camera_ray);
 
-    // If the dot product is negative, the normal is pointing away from the camera
-    if (dot_normal_camera < 0) {
-      continue;
+      // If the dot product is negative, the normal is pointing away from the camera
+      if (dot_normal_camera < 0) {
+        continue;
+      }
+
     }
 
     triangle_t projected_triangle;
@@ -151,31 +172,37 @@ void render(void) {
   int num_triangles = array_length(triangles_to_render);
   for (int i = 0; i < num_triangles; i++) {
     triangle_t triangle = triangles_to_render[i];
-    draw_rect(triangle.points[0].x, triangle.points[0].y, 3, 3, 0xFFFFFFFF);
 
-    draw_rect(triangle.points[1].x, triangle.points[1].y, 3, 3, 0xFFFFFFFF);
+    if (render_method == RENDER_WIRE_VERTEX || render_method == RENDER_SOLID_WIRE_VERTEX) {
+      int vertex_radius = 3;
+      draw_rect(triangle.points[0].x - vertex_radius, triangle.points[0].y - vertex_radius, vertex_radius*2, vertex_radius*2, 0xFFFF0000);
+      draw_rect(triangle.points[1].x - vertex_radius, triangle.points[1].y - vertex_radius, vertex_radius*2, vertex_radius*2, 0xFFFF0000);
+      draw_rect(triangle.points[2].x - vertex_radius, triangle.points[2].y - vertex_radius, vertex_radius*2, vertex_radius*2, 0xFFFF0000);
+    }
 
-    draw_rect(triangle.points[2].x, triangle.points[2].y, 3, 3, 0xFFFFFFFF);
+    if (render_method == RENDER_SOLID || render_method == RENDER_SOLID_WIRE || render_method == RENDER_SOLID_WIRE_VERTEX)  {
+      draw_filled_triangle(
+        triangle.points[0].x, 
+        triangle.points[0].y, 
+        triangle.points[1].x, 
+        triangle.points[1].y, 
+        triangle.points[2].x, 
+        triangle.points[2].y, 
+        0xFFFFFFFF
+      );
+    }
 
-    draw_filled_triangle(
-      triangle.points[0].x, 
-      triangle.points[0].y, 
-      triangle.points[1].x, 
-      triangle.points[1].y, 
-      triangle.points[2].x, 
-      triangle.points[2].y, 
-      0xFFFFFFFF
-    );
-
-    draw_triangle(
-      triangle.points[0].x, 
-      triangle.points[0].y, 
-      triangle.points[1].x, 
-      triangle.points[1].y, 
-      triangle.points[2].x, 
-      triangle.points[2].y, 
-      0xFFFF00FF
-    );    
+    if (render_method == RENDER_WIRE || render_method == RENDER_WIRE_VERTEX || render_method == RENDER_SOLID_WIRE || render_method == RENDER_SOLID_WIRE_VERTEX) {
+      draw_triangle(
+        triangle.points[0].x, 
+        triangle.points[0].y, 
+        triangle.points[1].x, 
+        triangle.points[1].y, 
+        triangle.points[2].x, 
+        triangle.points[2].y, 
+        0xFFFF00FF
+      );    
+    }
   }
 
   // clear array of triangles to render

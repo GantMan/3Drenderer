@@ -7,6 +7,7 @@
 #include "vector.h"
 #include "mesh.h"
 #include "matrix.h"
+#include "light.h"
 
 triangle_t* triangles_to_render = NULL;
 
@@ -43,8 +44,8 @@ void setup(void) {
   float zfar = 1000.0;
   proj_matrix = mat4_make_perspective(fov, aspect, znear, zfar);
 
-  load_cube_mesh_data();
-  // load_obj_file_data("./assets/cube.obj");
+  // load_cube_mesh_data();
+  load_obj_file_data("./assets/f22.obj");
 }
 
 void process_input(void) {
@@ -93,9 +94,9 @@ void update(void) {
   mesh.rotation.x += 0.005;
   mesh.rotation.y += 0.003;
   mesh.rotation.z += 0.001;
-  mesh.scale.x += 0.0002;
-  mesh.scale.y += 0.0001;
-  mesh.translation.x += 0.001;
+  // mesh.scale.x += 0.0002;
+  // mesh.scale.y += 0.0001;
+  // mesh.translation.x += 0.001;
   mesh.translation.z = 5.0;
 
   mat4_t scale_matrix = mat4_make_scale(mesh.scale.x, mesh.scale.y, mesh.scale.z);
@@ -132,27 +133,27 @@ void update(void) {
       transformed_vertices[j] = transformed_vertex;
     }
 
+    // Calculate if perform backface culling 
+    vec3_t vector_a = vec3_from_vec4(transformed_vertices[0]);
+    vec3_t vector_b = vec3_from_vec4(transformed_vertices[1]);
+    vec3_t vector_c = vec3_from_vec4(transformed_vertices[2]);
+
+    vec3_t vector_ab = vec3_sub(vector_b, vector_a);
+    vec3_t vector_ac = vec3_sub(vector_c, vector_a);
+    vec3_normalize(&vector_ab);
+    vec3_normalize(&vector_ac);
+
+    // Compute the face normal
+    vec3_t normal = vec3_cross(vector_ab, vector_ac);
+    vec3_normalize(&normal);
+
+    // Find the vector between the triangle and the camera origin
+    vec3_t camera_ray = vec3_sub(camera_position, vector_a);
+
+    // calculate how aligned the normal is with the camera ray
+    float dot_normal_camera = vec3_dot(normal, camera_ray);
+
     if (cull_method == CULL_BACKFACE) {
-      // Perform backface culling 
-      vec3_t vector_a = vec3_from_vec4(transformed_vertices[0]);
-      vec3_t vector_b = vec3_from_vec4(transformed_vertices[1]);
-      vec3_t vector_c = vec3_from_vec4(transformed_vertices[2]);
-
-      vec3_t vector_ab = vec3_sub(vector_b, vector_a);
-      vec3_t vector_ac = vec3_sub(vector_c, vector_a);
-      vec3_normalize(&vector_ab);
-      vec3_normalize(&vector_ac);
-
-      // Compute the face normal
-      vec3_t normal = vec3_cross(vector_ab, vector_ac);
-      vec3_normalize(&normal);
-
-      // Find the vector between the triangle and the camera origin
-      vec3_t camera_ray = vec3_sub(camera_position, vector_a);
-
-      // calculate how aligned the normal is with the camera ray
-      float dot_normal_camera = vec3_dot(normal, camera_ray);
-
       // If the dot product is negative, the normal is pointing away from the camera
       if (dot_normal_camera < 0) {
         continue;
@@ -180,13 +181,19 @@ void update(void) {
     // Calculate average depth after transofrmations
     float average_depth = (transformed_vertices[0].z + transformed_vertices[1].z + transformed_vertices[2].z) / 3;
 
+    // Calculate shading density on normal and inverse light ray
+    float light_intentisty_factor = -vec3_dot(normal, light.direction);
+
+    // calculate triangle color based on light angle 
+    uint32_t triangle_color = light_apply_intensity(mesh_face.color, light_intentisty_factor);
+
     triangle_t projected_triangle = {
       .points = {
         { projected_points[0].x, projected_points[0].y },
         { projected_points[1].x, projected_points[1].y },
         { projected_points[2].x, projected_points[2].y },
       },
-      .color = mesh_face.color,
+      .color = triangle_color,
       .avg_depth = average_depth
     };
 

@@ -45,7 +45,7 @@ void setup(void) {
   proj_matrix = mat4_make_perspective(fov, aspect, znear, zfar);
 
   // load_cube_mesh_data();
-  load_obj_file_data("./assets/f22.obj");
+  load_obj_file_data("./assets/skull.obj");
 }
 
 void process_input(void) {
@@ -97,7 +97,7 @@ void update(void) {
   // mesh.scale.x += 0.0002;
   // mesh.scale.y += 0.0001;
   // mesh.translation.x += 0.001;
-  mesh.translation.z = 5.0;
+  mesh.translation.z = 15.0;
 
   mat4_t scale_matrix = mat4_make_scale(mesh.scale.x, mesh.scale.y, mesh.scale.z);
   mat4_t translation_matrix = mat4_make_translation(mesh.translation.x, mesh.translation.y, mesh.translation.z);

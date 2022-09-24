@@ -18,7 +18,9 @@ enum render_method {
     RENDER_WIRE_VERTEX,
     RENDER_SOLID,
     RENDER_SOLID_WIRE,
-    RENDER_SOLID_WIRE_VERTEX
+    RENDER_SOLID_WIRE_VERTEX,
+    RENDER_TEXTURED,
+    RENDER_TEXTURED_WIRE
 } render_method;
 
 extern SDL_Window* window;

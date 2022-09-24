@@ -7,6 +7,8 @@
 #include "vector.h"
 #include "mesh.h"
 #include "matrix.h"
+#include "triangle.h"
+#include "texture.h"
 #include "light.h"
 
 triangle_t* triangles_to_render = NULL;
@@ -44,8 +46,13 @@ void setup(void) {
   float zfar = 1000.0;
   proj_matrix = mat4_make_perspective(fov, aspect, znear, zfar);
 
-  // load_cube_mesh_data();
-  load_obj_file_data("./assets/skull.obj");
+  // load hardcoded texture 
+  mesh_texture = (uint32_t*) REDBRICK_TEXTURE;
+  texture_width = 64;
+  texture_height = 64;
+
+  load_cube_mesh_data();
+  // load_obj_file_data("./assets/f22.obj");
 }
 
 void process_input(void) {
@@ -70,6 +77,10 @@ void process_input(void) {
         render_method = RENDER_SOLID_WIRE;
       } else if (event.key.keysym.sym == SDLK_5) {
         render_method = RENDER_SOLID_WIRE_VERTEX;
+      } else if (event.key.keysym.sym == SDLK_6) {
+        render_method = RENDER_TEXTURED;
+      } else if (event.key.keysym.sym == SDLK_7) {
+        render_method = RENDER_TEXTURED_WIRE;        
       } else if (event.key.keysym.sym == SDLK_c) {
         cull_method = CULL_BACKFACE;
       } else if (event.key.keysym.sym == SDLK_d) {
@@ -92,12 +103,12 @@ void update(void) {
   triangles_to_render = NULL;
 
   mesh.rotation.x += 0.005;
-  mesh.rotation.y += 0.003;
-  mesh.rotation.z += 0.001;
+  // mesh.rotation.y += 0.003;
+  // mesh.rotation.z += 0.001;
   // mesh.scale.x += 0.0002;
   // mesh.scale.y += 0.0001;
   // mesh.translation.x += 0.001;
-  mesh.translation.z = 15.0;
+  mesh.translation.z = 5.0;
 
   mat4_t scale_matrix = mat4_make_scale(mesh.scale.x, mesh.scale.y, mesh.scale.z);
   mat4_t translation_matrix = mat4_make_translation(mesh.translation.x, mesh.translation.y, mesh.translation.z);
@@ -172,6 +183,9 @@ void update(void) {
       projected_points[j].x *= (window_width / 2);
       projected_points[j].y *= (window_height / 2);
 
+      // Invert Y values to account for screen coordinate system
+      projected_points[j].y *= -1;
+
       projected_points[j].x += window_width / 2;
       projected_points[j].y += window_height / 2;
 
@@ -192,6 +206,11 @@ void update(void) {
         { projected_points[0].x, projected_points[0].y },
         { projected_points[1].x, projected_points[1].y },
         { projected_points[2].x, projected_points[2].y },
+      },
+      .texcoords = {
+        { mesh_face.a_uv.u, mesh_face.a_uv.v },
+        { mesh_face.b_uv.u, mesh_face.b_uv.v },
+        { mesh_face.c_uv.u, mesh_face.c_uv.v },
       },
       .color = triangle_color,
       .avg_depth = average_depth
@@ -222,13 +241,24 @@ void render(void) {
   for (int i = 0; i < num_triangles; i++) {
     triangle_t triangle = triangles_to_render[i];
 
-    if (render_method == RENDER_WIRE_VERTEX || render_method == RENDER_SOLID_WIRE_VERTEX) {
+    if (render_method == RENDER_WIRE_VERTEX || render_method == RENDER_SOLID_WIRE_VERTEX ) {
       int vertex_radius = 3;
       draw_rect(triangle.points[0].x - vertex_radius, triangle.points[0].y - vertex_radius, vertex_radius*2, vertex_radius*2, 0xFFFF0000);
       draw_rect(triangle.points[1].x - vertex_radius, triangle.points[1].y - vertex_radius, vertex_radius*2, vertex_radius*2, 0xFFFF0000);
       draw_rect(triangle.points[2].x - vertex_radius, triangle.points[2].y - vertex_radius, vertex_radius*2, vertex_radius*2, 0xFFFF0000);
     }
 
+    // Draw textured triangle
+    if (render_method == RENDER_TEXTURED || render_method == RENDER_TEXTURED_WIRE) {
+      draw_textured_triangle(
+        triangle.points[0].x, triangle.points[0].y, triangle.texcoords[0].u, triangle.texcoords[0].v,
+        triangle.points[1].x, triangle.points[1].y, triangle.texcoords[1].u, triangle.texcoords[1].v,
+        triangle.points[2].x, triangle.points[2].y, triangle.texcoords[2].u, triangle.texcoords[2].v,
+        mesh_texture
+      );
+    }
+
+    // Draw filled triangle
     if (render_method == RENDER_SOLID || render_method == RENDER_SOLID_WIRE || render_method == RENDER_SOLID_WIRE_VERTEX)  {
       draw_filled_triangle(
         triangle.points[0].x, 
@@ -241,7 +271,7 @@ void render(void) {
       );
     }
 
-    if (render_method == RENDER_WIRE || render_method == RENDER_WIRE_VERTEX || render_method == RENDER_SOLID_WIRE || render_method == RENDER_SOLID_WIRE_VERTEX) {
+    if (render_method == RENDER_WIRE || render_method == RENDER_WIRE_VERTEX || render_method == RENDER_SOLID_WIRE || render_method == RENDER_SOLID_WIRE_VERTEX || render_method == RENDER_TEXTURED_WIRE) {
       draw_triangle(
         triangle.points[0].x, 
         triangle.points[0].y, 

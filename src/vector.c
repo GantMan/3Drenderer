@@ -46,6 +46,10 @@ void vec2_normalize(vec2_t *v) {
     v->y /= length;
 }
 
+float vec2_cross(vec2_t a, vec2_t b) {
+    return a.x * b.y - a.y * b.x;
+}
+
 float vec3_length(vec3_t v) {
     return sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
 }

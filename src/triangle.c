@@ -66,6 +66,46 @@ void draw_triangle(int x0, int y0, int x1, int y1, int x2, int y2, uint32_t colo
   draw_line(x2, y2, x0, y0, color);
 }
 
+vec3_t barycentric_weights(vec2_t a, vec2_t b, vec2_t c, vec2_t p) {
+  vec2_t ab = vec2_sub(b, a);
+  vec2_t bc = vec2_sub(c, b);
+  vec2_t ac = vec2_sub(c, a);
+  vec2_t ap = vec2_sub(p, a);
+  vec2_t bp = vec2_sub(p, b);
+
+  // area of full triangle
+  float area_triangle_abc = vec2_cross(ab, ac);
+
+  // area of sub-triangles
+  float alpha = vec2_cross(bc, bp) / area_triangle_abc;
+  float beta = vec2_cross(ap, ac) / area_triangle_abc;
+  float gamma = 1.0f - alpha - beta;
+
+  vec3_t weights = {alpha, beta, gamma};
+  return weights;
+}
+
+void draw_texel(
+  int x, int y, uint32_t* texture, 
+  vec2_t point_a, vec2_t point_b, vec2_t point_c,
+  float u0, float v0, float u1, float v1, float u2, float v2
+) {
+  vec3_t weights = barycentric_weights(point_a, point_b, point_c, (vec2_t){x, y});
+
+  float alpha = weights.x;
+  float beta = weights.y;
+  float gamma = weights.z;
+
+  float interpolated_u = alpha * u0 + beta * u1 + gamma * u2;
+  float interpolated_v = alpha * v0 + beta * v1 + gamma * v2;
+
+  int tex_x = abs((int)(interpolated_u * texture_width));
+  int tex_y = abs((int)(interpolated_v * texture_height));
+
+  uint32_t texel = texture[tex_y * texture_width + tex_x];
+  draw_pixel(x, y, texel);
+}
+
 void draw_textured_triangle (
   int x0, int y0, float u0, float v0, 
   int x1, int y1, float u1, float v1, 
@@ -92,6 +132,11 @@ void draw_textured_triangle (
     float_swap(&v0, &v1);
   }
 
+  // Create vector points
+  vec2_t point_a = {x0, y0};
+  vec2_t point_b = {x1, y1};
+  vec2_t point_c = {x2, y2};
+
   // Render upper part (flatbottom)
   // Calculate the inverse slopes
   float invslope1 = 0;
@@ -115,7 +160,7 @@ void draw_textured_triangle (
         int_swap(&x_start, &x_end);
       }
       for (int x = x_start; x < x_end; x++) {
-        draw_pixel(x, y, 0xFFFF00FF);
+        draw_texel(x, y, texture, point_a, point_b, point_c, u0, v0, u1, v1, u2, v2);
       }
     }
   }
@@ -141,7 +186,7 @@ void draw_textured_triangle (
         int_swap(&x_start, &x_end);
       }
       for (int x = x_start; x < x_end; x++) {
-        draw_pixel(x, y, glitter());
+        draw_texel(x, y, texture, point_a, point_b, point_c, u0, v0, u1, v1, u2, v2);
       }
     }
   }

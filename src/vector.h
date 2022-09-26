@@ -21,6 +21,7 @@ vec2_t vec2_div(vec2_t v, float factor);
 float vec2_dot(vec2_t a, vec2_t b);
 void vec2_normalize(vec2_t *v);
 float vec2_cross(vec2_t a, vec2_t b);
+vec2_t vec2_from_vec4(vec4_t v);
 
 // vec3 functions
 

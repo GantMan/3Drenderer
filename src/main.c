@@ -52,8 +52,8 @@ void setup(void) {
   // texture_width = 64;
   // texture_height = 64;
 
-  load_cube_mesh_data();
-  // load_obj_file_data("./assets/cube.obj");
+  // load_cube_mesh_data();
+  load_obj_file_data("./assets/cube.obj");
   load_png_texture_data("./assets/cube.png");
 }
 
@@ -123,9 +123,9 @@ void update(void) {
     face_t mesh_face = mesh.faces[i];
 
     vec3_t face_vertices[3];
-    face_vertices[0] = mesh.vertices[mesh_face.a - 1];
-    face_vertices[1] = mesh.vertices[mesh_face.b - 1];
-    face_vertices[2] = mesh.vertices[mesh_face.c - 1];
+    face_vertices[0] = mesh.vertices[mesh_face.a];
+    face_vertices[1] = mesh.vertices[mesh_face.b];
+    face_vertices[2] = mesh.vertices[mesh_face.c];
 
     vec4_t transformed_vertices[4];
 

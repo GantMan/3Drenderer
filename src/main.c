@@ -53,8 +53,8 @@ void setup(void) {
   // texture_height = 64;
 
   // load_cube_mesh_data();
-  load_obj_file_data("./assets/cube.obj");
-  load_png_texture_data("./assets/cube.png");
+  load_obj_file_data("./assets/crab.obj");
+  load_png_texture_data("./assets/crab.png");
 }
 
 void process_input(void) {
